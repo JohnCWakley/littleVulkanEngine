@@ -1,4 +1,4 @@
-#include "rendering/systems/simple_render_system.hpp"
+#include "simple_render_system.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -63,7 +63,8 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
       pipelineConfig);
 }
 
-void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {
+void SimpleRenderSystem::renderGameObjects(
+    FrameInfo& frameInfo, std::vector<LveGameObject>& gameObjects) {
   lvePipeline->bind(frameInfo.commandBuffer);
 
   vkCmdBindDescriptorSets(
@@ -76,9 +77,7 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {
       0,
       nullptr);
 
-  for (auto& kv : frameInfo.gameObjects) {
-    auto& obj = kv.second;
-    if (obj.model == nullptr) continue;
+  for (auto& obj : gameObjects) {
     SimplePushConstantData push{};
     push.modelMatrix = obj.transform.mat4();
     push.normalMatrix = obj.transform.normalMatrix();

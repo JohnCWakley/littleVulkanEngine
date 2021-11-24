@@ -1,10 +1,9 @@
 #include "first_app.hpp"
 
 #include "keyboard_movement_controller.hpp"
-#include "rendering/lve_buffer.hpp"
-#include "rendering/lve_camera.hpp"
-#include "rendering/systems/point_light_system.hpp"
-#include "rendering/systems/simple_render_system.hpp"
+#include "lve_buffer.hpp"
+#include "lve_camera.hpp"
+#include "simple_render_system.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -16,7 +15,6 @@
 #include <array>
 #include <cassert>
 #include <chrono>
-#include <iostream>
 #include <stdexcept>
 
 namespace lve {
@@ -68,10 +66,6 @@ void FirstApp::run() {
       lveDevice,
       lveRenderer.getSwapChainRenderPass(),
       globalSetLayout->getDescriptorSetLayout()};
-  PointLightSystem pointLightSystem{
-      lveDevice,
-      lveRenderer.getSwapChainRenderPass(),
-      globalSetLayout->getDescriptorSetLayout()};
   LveCamera camera{};
 
   auto viewerObject = LveGameObject::createGameObject();
@@ -105,7 +99,7 @@ void FirstApp::run() {
 
       // update
       GlobalUbo ubo{};
-      update(ubo, frameInfo);
+      ubo.projectionView = camera.getProjection() * camera.getView();
       uboBuffers[frameIndex]->writeToBuffer(&ubo);
       uboBuffers[frameIndex]->flush();
 
@@ -118,28 +112,6 @@ void FirstApp::run() {
   }
 
   vkDeviceWaitIdle(lveDevice.device());
-}
-
-void FirstApp::update(GlobalUbo &ubo, FrameInfo &frameInfo) {
-  ubo.projectionMatrix = frameInfo.camera.getProjection();
-  ubo.viewMatrix = frameInfo.camera.getView();
-  ubo.invViewMatrix = frameInfo.camera.getInverseView();
-
-  auto rotateLights = glm::rotate(glm::mat4(1.f), frameInfo.frameTime, {0.f, -1.f, 0.f});
-  int lightIndex = 0;
-  for (auto &kv : frameInfo.gameObjects) {
-    auto &obj = kv.second;
-    if (obj.pointLight == nullptr) continue;
-
-    // update light position
-    obj.transform.translation = glm::vec3(rotateLights * glm::vec4(obj.transform.translation, 1.f));
-
-    // copy light to ubo
-    ubo.lights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0);
-    ubo.lights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-    if (++lightIndex == MAX_LIGHTS) break;
-  }
-  ubo.numLights = lightIndex;
 }
 
 void FirstApp::loadGameObjects() {

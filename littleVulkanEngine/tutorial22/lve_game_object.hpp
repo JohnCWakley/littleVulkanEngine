@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rendering/lve_model.hpp"
+#include "lve_model.hpp"
 
 // libs
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,7 +16,7 @@ struct TransformComponent {
   glm::vec3 scale{1.f, 1.f, 1.f};
   glm::vec3 rotation{};
 
-  // Matrix coresponds to Translate * Ry * Rx * Rz * Scale
+  // Matrix corrsponds to Translate * Ry * Rx * Rz * Scale
   // Rotations correspond to Tait-bryan angles of Y(1), X(2), Z(3)
   // https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
   glm::mat4 mat4();
@@ -24,23 +24,15 @@ struct TransformComponent {
   glm::mat3 normalMatrix();
 };
 
-struct PointLightComponent {
-  float lightIntensity = 30.f;
-};
-
 class LveGameObject {
  public:
   using id_t = unsigned int;
-  using Map = std::unordered_map<id_t, LveGameObject>;
-
   using Map = std::unordered_map<id_t, LveGameObject>;
 
   static LveGameObject createGameObject() {
     static id_t currentId = 0;
     return LveGameObject{currentId++};
   }
-
-  static LveGameObject makePointLight(float intensity = 10.f, glm::vec3 color = glm::vec3(1.f));
 
   LveGameObject(const LveGameObject &) = delete;
   LveGameObject &operator=(const LveGameObject &) = delete;
@@ -53,12 +45,9 @@ class LveGameObject {
   glm::vec3 color{};
   TransformComponent transform{};
 
-  std::unique_ptr<PointLightComponent> pointLight{};
-
  private:
   LveGameObject(id_t objId) : id{objId} {}
 
   id_t id;
 };
-
 }  // namespace lve
